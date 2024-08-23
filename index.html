@@ -48,6 +48,7 @@
     fieldNames = []
     resultData = "";
     ercATAPIKey = "";
+    timer = null
     function onPopulate() {
       baseID = $("#erc_at_base").val();
       tableName = $("#erc_at_table").val();
@@ -64,13 +65,15 @@
       }
       atRequest.setFilterFormula(filterFormula);
       atRequest.setMaxRecords(100);
-
-      airtableFetch(ercATAPIKey,atRequest.build()).then(data => {
-        resultData = data;
-        console.log(resultData);
-        $("#erc_at_output").innerText = resultData;
-        JFCustomWidget.sendData({ valid: true, value: resultData });
-      });
+      if(timeout!=null){clearTimeout(timeout);}
+      timeout = setTimeout(function(){
+        airtableFetch(ercATAPIKey,atRequest.build()).then(data => {
+          resultData = data;
+          console.log(resultData);
+          $("#erc_at_output").innerText = resultData;
+          JFCustomWidget.sendData({ valid: true, value: resultData });
+        }); 
+      }, 2000);
       
     }
     //always subscribe to ready event and implement widget related code
