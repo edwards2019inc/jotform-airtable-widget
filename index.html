@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <script src="https://js.jotform.com/JotFormCustomWidget.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.3.min.js"></script>
+  <script src="airtable.js"></script>
+  <style>
+    #div.status_msg {
+      background: #CCCCCC;
+    }
+
+    div.button {
+      padding: 10px;
+      border: 2px solid black;
+      cursor: pointer;
+      max-width: 150px;
+      text-align: center;
+
+    }
+  </style>
+</head>
+
+<body>
+  <div id="main">
+    <div id="statusBar"></div>
+    <h3>Regex Widget</h3>
+    <span id="erc_at_base_label">BaseID</span>
+    <input type="text" id="erc_at_base" value='appwwVTqFOwrmhIaY'><br>
+    <span id="erc_at_table_label">Table</span>
+    <input type="text" id="erc_at_table" value='Ride'><br>
+    <span id="erc_at_view_label">View</span>
+    <input type="text" id="erc_at_view" value='Requested'><br>
+    <span id="erc_at_fields_label">Fields</span>
+    <input type="text" id="erc_at_fields" value='RideID,PassengerName'><br>
+    <span id="erc_at_filter_label">Filter</span>
+    <input type="text" id="erc_at_filter" value="{RideType} = 'One-Way'"><br>
+    <span id="output_label">Output:</span><br/>
+    <div id="erc_at_output"></div>
+    <div class="button" id="evaluate" onclick="onPopulate();">
+      <span style="font-weight:bold;font-size:18px;">Run Query</span>
+    </div>
+  </div>
+  <script type="text/javascript">
+    baseID = "";
+    tableName = "";
+    viewName = "";
+    fieldNames = []
+    resultData = "";
+    ercATAPIKey = "";
+    function onPopulate() {
+      baseID = $("#erc_at_base").val();
+      tableName = $("#erc_at_table").val();
+      viewName = $("#erc_at_view").val();
+      fieldNames = $("#erc_at_fields").val().split(",");
+      filterFormula= $("#erc_at_filter").val();
+      
+      atRequest = new AirtableRequestBuilder(baseID,tableName);
+      if(viewName != ""){
+        atRequest.setView(viewName);
+      }
+      for(let i in fieldNames){
+        atRequest.addField(fieldNames[i]);
+      }
+      atRequest.setFilterFormula(filterFormula);
+      atRequest.setMaxRecords(100);
+
+      airtableFetch(ercATAPIKey,atRequest.build()).then(data => {
+        resultData = data;
+        console.log(resultData);
+        $("#erc_at_output").innerText = resultData;
+        JFCustomWidget.sendData({ valid: true, value: resultData });
+      });
+      
+    }
+    //always subscribe to ready event and implement widget related code
+    //inside callback function , it is the best practice while developing widgets
+    JFCustomWidget.subscribe("ready", function (formid, value) {
+      console.log("airtable widget ready: " + JSON.stringify(formid) + ", " + JSON.stringify(value));
+      $("#erc_at_filter").val(value);
+      ercATAPIKey = JFCustomWidget.getWidgetSetting('APIKey');
+      $("#erc_at_base").val(JFCustomWidget.getWidgetSetting('BaseID'));
+      $("#erc_at_table").val(JFCustomWidget.getWidgetSetting('TableName'));
+      $("#erc_at_view").val(JFCustomWidget.getWidgetSetting('ViewName'));
+      $("#erc_at_fields").val(JFCustomWidget.getWidgetSetting('FieldList'));
+      
+      //subscribe to form submit event
+      JFCustomWidget.subscribe("submit", function () {
+        var msg = {
+          valid: true,
+          value: resultData
+        };
+        // send value to JotForm
+        console.log("sendSubmit in airtable widget");
+        JFCustomWidget.sendSubmit(msg);
+      });
+      JFCustomWidget.subscribe('populate', function (data) {
+        //logStatusMessage("populate: " + JSON.stringify(data));
+        console.log("populate: " + JSON.stringify(data));
+        $("#erc_at_filter").val(data.value);
+        ercATAPIKey = JFCustomWidget.getWidgetSetting('APIKey');
+        $("#erc_at_base").val(JFCustomWidget.getWidgetSetting('BaseID'));
+        $("#erc_at_table").val(JFCustomWidget.getWidgetSetting('TableName'));
+        $("#erc_at_view").val(JFCustomWidget.getWidgetSetting('ViewName'));
+        $("#erc_at_fields").val(JFCustomWidget.getWidgetSetting('FieldList'));
+        
+        onPopulate();
+      });
+    });
+    $(document).ready(function () {
+
+    });
+  </script>
+</body>
+
+</html>
