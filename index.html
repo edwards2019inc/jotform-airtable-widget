@@ -70,8 +70,8 @@
         airtableFetch(ercATAPIKey,atRequest.build()).then(data => {
           resultData = data;
           console.log(resultData);
-          $("#erc_at_output").innerText = resultData;
-          JFCustomWidget.sendData({ valid: true, value: resultData });
+          $("#erc_at_output").innerText =JSON.stringify(resultData);
+          JFCustomWidget.sendData({ valid: true, value: JSON.stringify(resultData) });
         }); 
       }, 2000);
       
