@@ -106,9 +106,6 @@
         $("#erc_at_table").val(JFCustomWidget.getWidgetSetting('TableName'));
         $("#erc_at_view").val(JFCustomWidget.getWidgetSetting('ViewName'));
         $("#erc_at_fields").val(JFCustomWidget.getWidgetSetting('FieldList'));
-        // send empty data so the incoming value doesn't propagate
-        // to any downstream fields we may be conditionally copying to
-        JFCustomWidget.sendData({ valid: true, value: "{}" });
         onPopulate();
       });
     });
