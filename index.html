@@ -68,10 +68,10 @@
       if(timeout!=null){clearTimeout(timeout);}
       timeout = setTimeout(function(){
         airtableFetch(ercATAPIKey,atRequest.build()).then(data => {
-          resultData = data;
-          console.log(resultData);
-          $("#erc_at_output").innerText =JSON.stringify(resultData);
-          JFCustomWidget.sendData({ valid: true, value: JSON.stringify(resultData) });
+          resultData = JSON.stringify(data);
+          console.log("airtable result: "+resultData);
+          $("#erc_at_output").innerText =resultData;
+          JFCustomWidget.sendData({ valid: true, value: resultData });
         }); 
       }, 2000);
       
