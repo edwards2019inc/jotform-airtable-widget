@@ -24,69 +24,79 @@
 <body>
   <div id="main">
     <div id="statusBar"></div>
-    <h3>Airtable Widget</h3>
-    <span id="erc_at_base_label">BaseID</span>
-    <input type="text" id="erc_at_base" value='-- Your Base ID Here --'><br>
-    <span id="erc_at_table_label">Table</span>
-    <input type="text" id="erc_at_table" value='-- Table Name --'><br>
-    <span id="erc_at_view_label">View</span>
-    <input type="text" id="erc_at_view" value='-- View Name --'><br>
-    <span id="erc_at_fields_label">Fields</span>
-    <input type="text" id="erc_at_fields" value='-- Field List --'><br>
-    <span id="erc_at_filter_label">Filter</span>
-    <input type="text" id="erc_at_filter" value="-- Filter Formula --"><br>
-    <span id="output_label">Output:</span><br/>
-    <div id="erc_at_output"></div>
-    <div class="button" id="evaluate" onclick="onPopulate();">
-      <span style="font-weight:bold;font-size:18px;">Run Query</span>
+    <div id="userInput"></div>
+    <div id="widgetParams">
+      <span>BaseID</span><input id="ercat_baseid"></input>
+      <span>TableName</span><input id="ercat_table"></input>
+      <span>ViewName</span><input id="ercat_view"></input>
+      <span>FieldNames</span><input id="ercat_fields"></input>
+      <span>FilterFormula</span><input id="ercat_filter"></input>
     </div>
   </div>
   <script type="text/javascript">
-    baseID = "";
-    tableName = "";
-    viewName = "";
-    fieldNames = []
-    resultData = "";
-    ercATAPIKey = "";
-    timeout = null
-    function onPopulate() {
-      baseID = $("#erc_at_base").val();
-      tableName = $("#erc_at_table").val();
-      viewName = $("#erc_at_view").val();
-      fieldNames = $("#erc_at_fields").val().split(",");
-      filterFormula= $("#erc_at_filter").val();
-      
-      atRequest = new AirtableRequestBuilder(baseID,tableName);
-      if(viewName != ""){
-        atRequest.setView(viewName);
+    ercatAPIKey="";
+    function onPopulate() {      
+      console.log("airtable widget onPopulate()");
+    }
+    function evalParam(param){
+      const regexp = /\$[A-z0-9]*\$/g;
+      let matches = [...param.matchAll(regexp)];
+        for(let i in matches){
+          let token = matches[i][0];
+          let id = "#" + token.replaceAll("$","");
+          param = param.replace(token,$(id).val());
+        }
+        return param
+    }
+    function tryQueryAT(){
+      let params = {
+        "baseID": $("#ercat_baseid").val(),
+        "tableName" : $("#ercat_table").val(),
+        "viewName" : $("#ercat_view").val(),
+        "fieldNames" : $("#ercat_fields").val().split(","),
+        "filterFormula" : $("#ercat_filter").val()
+      };
+      tokenParams=["baseID","tableName","viewName","filterFormula"];
+      for( let i in tokenParams){
+        const param = tokenParams[i];
+        params[param] = evalParam(params[param]);
       }
-      for(let i in fieldNames){
-        atRequest.addField(fieldNames[i]);
+      atRequest = new AirtableRequestBuilder(params["baseID"],params["tableName"]);
+      if(params["viewName"] != ""){
+        atRequest.setView(params["viewName"]);
       }
-      atRequest.setFilterFormula(filterFormula);
+      for(let i in params["fieldNames"]){
+        let fieldName = evalParam(params["fieldNames"][i]);
+        atRequest.addField(fieldName);
+      }
+      atRequest.setFilterFormula(params["filterFormula"]);
       atRequest.setMaxRecords(100);
-      if(timeout!=null){clearTimeout(timeout);}
-      timeout = setTimeout(function(){
-        airtableFetch(ercATAPIKey,atRequest.build()).then(data => {
+      airtableFetch(ercATAPIKey,atRequest.build()).then(data => {
           resultData = JSON.stringify(data);
           console.log("airtable result: "+resultData);
           $("#erc_at_output").innerText =resultData;
           JFCustomWidget.sendData({ valid: true, value: resultData });
-        }); 
-      }, 2000);
-      
+      }); 
     }
     //always subscribe to ready event and implement widget related code
     //inside callback function , it is the best practice while developing widgets
     JFCustomWidget.subscribe("ready", function (formid, value) {
       console.log("airtable widget ready: " + JSON.stringify(formid) + ", " + JSON.stringify(value));
-      $("#erc_at_filter").val(value);
-      ercATAPIKey = JFCustomWidget.getWidgetSetting('APIKey');
-      $("#erc_at_base").val(JFCustomWidget.getWidgetSetting('BaseID'));
-      $("#erc_at_table").val(JFCustomWidget.getWidgetSetting('TableName'));
-      $("#erc_at_view").val(JFCustomWidget.getWidgetSetting('ViewName'));
-      $("#erc_at_fields").val(JFCustomWidget.getWidgetSetting('FieldList'));
-      
+      // build html form
+      let userInputHTML = JFCustomWidget.getWidgetSetting('UserInputHTML');
+      let formEle = document.createElement("div");
+      $("#userInput").html(userInputHTML);
+      $("#userInput input").each( (i,ele)=>{
+        $(ele).on('change',function(){
+          tryQueryAT();
+        })
+      });
+      ercatAPIKey = JFCustomWidget.getWidgetSetting('APIKey')
+      $("#ercat_baseid").val(JFCustomWidget.getWidgetSetting('BaseID'));
+      $("#ercat_table").val(JFCustomWidget.getWidgetSetting('TableName'));
+      $("#ercat_view").val(JFCustomWidget.getWidgetSetting('ViewName'));
+      $("#ercat_fields").val(JFCustomWidget.getWidgetSetting('FieldNames'));
+      $("#ercat_filter").val(JFCustomWidget.getWidgetSetting('FilterFormula'));
       //subscribe to form submit event
       JFCustomWidget.subscribe("submit", function () {
         var msg = {
@@ -100,12 +110,6 @@
       JFCustomWidget.subscribe('populate', function (data) {
         //logStatusMessage("populate: " + JSON.stringify(data));
         console.log("airtable populate: " + JSON.stringify(data));
-        $("#erc_at_filter").val(data.value);
-        ercATAPIKey = JFCustomWidget.getWidgetSetting('APIKey');
-        $("#erc_at_base").val(JFCustomWidget.getWidgetSetting('BaseID'));
-        $("#erc_at_table").val(JFCustomWidget.getWidgetSetting('TableName'));
-        $("#erc_at_view").val(JFCustomWidget.getWidgetSetting('ViewName'));
-        $("#erc_at_fields").val(JFCustomWidget.getWidgetSetting('FieldList'));
         onPopulate();
       });
     });
