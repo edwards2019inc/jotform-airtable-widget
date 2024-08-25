@@ -49,6 +49,7 @@
         return param
     }
     function tryQueryAT(){
+      ercatAPIKey = JFCustomWidget.getWidgetSetting('APIKey');
       let params = {
         "baseID": $("#ercat_baseid").val(),
         "tableName" : $("#ercat_table").val(),
@@ -91,7 +92,6 @@
           tryQueryAT();
         })
       });
-      ercatAPIKey = JFCustomWidget.getWidgetSetting('APIKey')
       $("#ercat_baseid").val(JFCustomWidget.getWidgetSetting('BaseID'));
       $("#ercat_table").val(JFCustomWidget.getWidgetSetting('TableName'));
       $("#ercat_view").val(JFCustomWidget.getWidgetSetting('ViewName'));
