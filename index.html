@@ -115,7 +115,7 @@
       let runOnReady = JFCustomWidget.getWidgetSetting('RunOnReady');
       console.log("Airtable Widget RunOnReady: " + runOnReady);
       if(runOnReady == "Yes"){
-        onPopulate();
+        tryQueryAT();
       }
     });
     $(document).ready(function () {
