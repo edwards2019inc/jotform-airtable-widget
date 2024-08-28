@@ -81,8 +81,8 @@
     }
     //always subscribe to ready event and implement widget related code
     //inside callback function , it is the best practice while developing widgets
-    JFCustomWidget.subscribe("ready", function (formid, value) {
-      console.log("airtable widget ready: " + JSON.stringify(formid) + ", " + JSON.stringify(value));
+    JFCustomWidget.subscribe("ready", function (initData) {
+      console.log("airtable widget ready: " + JSON.stringify(initData));
       // build html form
       let userInputHTML = JFCustomWidget.getWidgetSetting('UserInputHTML');
       let formEle = document.createElement("div");
@@ -112,6 +112,11 @@
         console.log("airtable populate: " + JSON.stringify(data));
         onPopulate();
       });
+      let runOnReady = JFCustomWidget.getWidgetSetting('RunOnReady');
+      console.log("Airtable Widget RunOnReady: " + runOnReady);
+      if(runOnReady == "Yes"){
+        onPopulate();
+      }
     });
     $(document).ready(function () {
 
