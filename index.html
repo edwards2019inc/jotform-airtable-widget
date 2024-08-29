@@ -97,6 +97,9 @@
       $("#ercat_view").val(JFCustomWidget.getWidgetSetting('ViewName'));
       $("#ercat_fields").val(JFCustomWidget.getWidgetSetting('FieldNames'));
       $("#ercat_filter").val(JFCustomWidget.getWidgetSetting('FilterFormula'));
+      if(!initData.isApp || initData.isApp != "form-builder"){
+        $("#widgetParams").css("display","none");
+      }
       //subscribe to form submit event
       JFCustomWidget.subscribe("submit", function () {
         var msg = {
