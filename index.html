@@ -36,8 +36,9 @@
   <script type="text/javascript">
     ercatAPIKey="";
     resultData = {};
-    function onPopulate(data) {      
-      console.log("airtable widget onPopulate()");
+    function onPopulate(jsonstr) {      
+      console.log("airtable widget onPopulate: " + jsonstr);
+      let data = JSON.parse(jsonstr);
       for(const k in data){
         $("#"+k).val(data[k]);
       }
@@ -118,12 +119,19 @@
       JFCustomWidget.subscribe('populate', function (data) {
         //logStatusMessage("populate: " + JSON.stringify(data));
         console.log("airtable populate: " + JSON.stringify(data));
-        onPopulate(JSON.parse(data.value));
+        onPopulate(data.value);
       });
-      let runOnReady = JFCustomWidget.getWidgetSetting('RunOnReady');
-      console.log("Airtable Widget RunOnReady: " + runOnReady);
-      if(runOnReady == "Yes"){
-        tryQueryAT();
+      if(initData.state == "oldvalue"){
+        console.log("airtable populate in ready");
+        if(initData.value){
+          onPopulate(initData.value);
+        }
+      }else{
+        let runOnReady = JFCustomWidget.getWidgetSetting('RunOnReady');
+        console.log("Airtable Widget RunOnReady: " + runOnReady);
+        if(runOnReady == "Yes"){
+          tryQueryAT();
+        }
       }
     });
     $(document).ready(function () {
