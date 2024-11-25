@@ -91,6 +91,7 @@
       console.log("airtable widget ready: " + JSON.stringify(initData));
       // build html form
       let userInputHTML = JFCustomWidget.getWidgetSetting('UserInputHTML');
+      console.log("airtable widget UserInputHTML:" + userInputHTML);
       let formEle = document.createElement("div");
       $("#userInput").html(userInputHTML);
       $("#userInput input").each( (i,ele)=>{
